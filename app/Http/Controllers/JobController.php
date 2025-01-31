@@ -18,12 +18,12 @@ class JobController extends Controller
      */
     public function index()
     {
-        $jobs = Job::all()->groupBy('featured');
+        $jobs = Job::latest()->with(['employer', 'tags'])->get()->groupBy('featured');
 
         return view('jobs.index', [
-            'featuredJobs' => $jobs[0],
-            'jobs' => $jobs[1],
-            'tags' => Tag::all()
+            'jobs' => $jobs[0],
+            'featuredJobs' => $jobs[1],
+            'tags' => Tag::all(),
         ]);
     }
 
@@ -44,24 +44,23 @@ class JobController extends Controller
             'title' => ['required'],
             'salary' => ['required'],
             'location' => ['required'],
-            'schedule' => ['required', Rule::in(['Full Time', 'Part Time'])],
-            'url' => ['required', 'active_url', 'url'],
-            'tags' => ['nullable']
+            'schedule' => ['required', Rule::in(['Part Time', 'Full Time'])],
+            'url' => ['required', 'active_url'],
+            'tags' => ['nullable'],
         ]);
 
         $attributes['featured'] = $request->has('featured');
 
-        $job =  Auth::user()->employer->jobs()->create(Arr::except($attributes, 'tags'))->tags();
-        if ($attributes['tags']) {
-            // laravel,backend => ['laravel', 'backend']
-            foreach (explode(",", $attributes['tags']) as $tag) {
+        $job = Auth::user()->employer->jobs()->create(Arr::except($attributes, 'tags'));
+
+        if ($attributes['tags'] ?? false) {
+            foreach (explode(',', $attributes['tags']) as $tag) {
                 $job->tag($tag);
             }
         }
 
         return redirect('/');
     }
-
 
 
 
