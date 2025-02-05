@@ -12,8 +12,13 @@ RUN apt-get update && apt-get install -y \
     unzip \
     sqlite3 \
     libsqlite3-dev \
+    curl \
     && docker-php-ext-install pdo pdo_sqlite zip mbstring \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js and npm
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -21,8 +26,11 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copy Laravel files
 COPY . .
 
-# Install Laravel dependencies
+# Install Laravel PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
+
+# Install JavaScript dependencies (npm)
+RUN npm install
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache

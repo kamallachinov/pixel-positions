@@ -9,7 +9,7 @@ services:
     restart: always
     volumes:
       - .:/var/www
-      - sqlite_data:/var/www/database
+      - ./database/database.sqlite:/var/www/database/database.sqlite
     networks:
       - laravel_network
     depends_on:
